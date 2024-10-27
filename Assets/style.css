@@ -16,7 +16,7 @@ body {
 }
 
 header {
-    background-image: url('https://www.publicdomainpictures.net/pictures/40000/nahled/space-stars.jpg');
+    background-image: url('Assets/banner.png'); /* Updated banner image */
     background-size: cover;
     background-position: center;
     padding: 50px 0;
