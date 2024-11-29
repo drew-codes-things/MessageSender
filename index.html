@@ -88,14 +88,152 @@
     </div>
 
     <script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Starlover's Discord Message Creator</title>
+    <link rel="icon" href="Assets/icon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Bona+Nova+SC&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="Assets/style.css">
+    
+</head>
+<body>
+    <header>
+        <h1>Starlover's Discord Message Creator</h1>
+    </header>
+    <div class="container">
+        <div class="section">
+            <h2>Select Message Type</h2>
+            <select id="messageType">
+                <option value="dual">Dual (Embed + Regular)</option>
+                <option value="embed">Embed Message</option>
+                <option value="regular">Regular Message</option>
+            </select>
+        </div>
+
+        <div class="section">
+            <h2>Default Options</h2>
+            <div class="options-container">
+                <div class="options-form">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                        <label for="webhook">Webhook URL</label>
+                        <div style="display: flex; align-items: center; width: 100%;">
+                            <input type="text" id="webhook" placeholder="https://discord.com/api/webhooks/...">
+                            <button class="edit-button" onclick="toggleMessageUrl()">Edit</button>
+                        </div>
+                        <div class="error-message" id="webhookError">Webhook URL is required!</div>
+                    </div>
+
+                    <div class="message-url" id="messageUrl">
+                        <label for="messageLink">Message Link (to edit)</label>
+                        <input type="text" id="messageLink" placeholder="https://discord.com/channels/...">
+                    </div>
+
+                    <div id="regularMessageSection">
+                        <label for="regularMessage">Regular Message</label>
+                        <textarea id="regularMessage" rows="5"></textarea>
+                    </div>
+
+                    <div id="embedSection">
+                        <div>
+                            <label for="webhookName">Webhook Name</label>
+                            <input type="text" id="webhookName">
+                        </div>
+                        <div>
+                            <label for="webhookAvatar">Webhook Avatar URL</label>
+                            <input type="text" id="webhookAvatar">
+                        </div>
+                        
+                        <div>
+                            <label for="title">Title</label>
+                            <input type="text" id="title">
+                        </div>
+                        <div>
+                            <label for="description">Description</label>
+                            <textarea id="description" rows="5"></textarea>
+                        </div>
+                        <div>
+                            <label for="color">Color (hex code)</label>
+                            <input type="text" id="color" placeholder="40e0d0" value="40e0d0">
+                        </div>
+                        <div>
+                            <label for="author">Author Name</label>
+                            <input type="text" id="author">
+                        </div>
+                        <div>
+                            <label for="authorIcon">Author Icon URL</label>
+                            <input type="text" id="authorIcon">
+                        </div>
+                        <div>
+                            <label for="thumbnail">Thumbnail URL</label>
+                            <input type="text" id="thumbnail">
+                        </div>
+                        <div>
+                            <label for="image">Image URL</label>
+                            <input type="text" id="image">
+                        </div>
+                        <div>
+                            <label for="footer">Footer Text</label>
+                            <input type="text" id="footer">
+                        </div>
+                        <div>
+                            <label for="footerIcon">Footer Icon URL</label>
+                            <input type="text" id="footerIcon">
+                        </div>
+                        <div>
+                            <label for="timestamp">Timestamp</label>
+                            <input type="datetime-local" id="timestamp">
+                        </div>
+                        
+                        <div>
+                            <label>Embed Fields</label>
+                            <div id="embedFieldsContainer">
+                                <button type="button" onclick="addEmbedField()">Add Field</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; align-items: center;">
+                        <button id="sendButton" onclick="sendMessages()">Send Message</button>
+                        <div id="statusMessage" class="status-message"></div>
+                    </div>
+                </div>
+
+                <div id="preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addEmbedField() {
+            const container = document.getElementById('embedFieldsContainer');
+            const fieldIndex = container.children.length - 1;
+            
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'embed-field';
+            fieldDiv.innerHTML = `
+                <input type="text" placeholder="Field Name" id="fieldName${fieldIndex}">
+                <textarea placeholder="Field Value" id="fieldValue${fieldIndex}" rows="3"></textarea>
+                <label>
+                    <input type="checkbox" id="fieldInline${fieldIndex}"> Inline
+                </label>
+                <button type="button" onclick="removeEmbedField(this)">Remove</button>
+            `;
+            
+            container.insertBefore(fieldDiv, container.lastElementChild);
+            updatePreview();
+        }
+
+        function removeEmbedField(button) {
+            button.closest('.embed-field').remove();
+            updatePreview();
+        }
+
         function updatePreview() {
             const messageType = document.getElementById('messageType').value;
             let previewHtml = '';
-
-            if (messageType === 'regular' || messageType === 'dual') {
-                const regularMessage = document.getElementById('regularMessage').value;
-                previewHtml += `<div style="margin-bottom: 10px;">${escapeHtml(regularMessage)}</div>`;
-            }
 
             if (messageType === 'embed' || messageType === 'dual') {
                 const title = document.getElementById('title').value;
@@ -108,14 +246,56 @@
                 const authorIcon = document.getElementById('authorIcon').value;
                 const thumbnail = document.getElementById('thumbnail').value;
                 const image = document.getElementById('image').value;
+                const footer = document.getElementById('footer').value;
+                const footerIcon = document.getElementById('footerIcon').value;
+                
+                const embedFields = [];
+                const fieldsContainer = document.getElementById('embedFieldsContainer');
+                
+                for (let i = 1; i < fieldsContainer.children.length; i++) {
+                    const fieldName = document.getElementById(`fieldName${i-1}`)?.value;
+                    const fieldValue = document.getElementById(`fieldValue${i-1}`)?.value;
+                    const fieldInline = document.getElementById(`fieldInline${i-1}`)?.checked;
+                    
+                    if (fieldName && fieldValue) {
+                        embedFields.push({ name: fieldName, value: fieldValue, inline: fieldInline });
+                    }
+                }
 
                 previewHtml += `
-                    <div style="border-left: 4px solid ${color}; padding-left: 10px;">
-                        ${author ? `<div style="display: flex; align-items: center;"><img src="${escapeHtml(authorIcon)}" alt="Author" style="border-radius: 50%; width: 32px; height: 32px; margin-right: 8px;"><strong>${escapeHtml(author)}</strong></div>` : ''}
-                        <div style="font-weight: bold; font-size: 16px; margin-top: 10px;">${escapeHtml(title)}</div>
-                        <div style="margin-top: 8px; font-size: 14px;">${escapeHtml(description)}</div>
-                        ${thumbnail ? `<img src="${escapeHtml(thumbnail)}" alt="Thumbnail" style="width: 60px; height: 60px; border-radius: 4px; margin-top: 8px;">` : ''}
-                        ${image ? `<img src="${escapeHtml(image)}" alt="Image" style="max-width: 60%; max-height: 200px; margin-top: 8px; border-radius: 4px;">` : ''}
+                    <div class="discord-message">
+                        ${author ? `<div class="embed-author">
+                            ${authorIcon ? `<img src="${escapeHtml(authorIcon)}" alt="Author" class="author-icon">` : ''}
+                            <span class="author-name">${escapeHtml(author)}</span>
+                        </div>` : ''}
+                        <div class="embed" style="border-left: 4px solid ${color};">
+                            ${title ? `<div class="embed-title">${escapeHtml(title)}</div>` : ''}
+                            ${description ? `<div class="embed-description">${escapeHtml(description)}</div>` : ''}
+                            
+                            ${embedFields.map(field => `
+                                <div class="embed-field" style="flex-basis: ${field.inline ? '45%' : '100%'};">
+                                    <div class="field-name">${escapeHtml(field.name)}</div>
+                                    <div class="field-value">${escapeHtml(field.value)}</div>
+                                </div>
+                            `).join('')}
+                            
+                            ${thumbnail ? `<img src="${escapeHtml(thumbnail)}" alt="Thumbnail" class="embed-thumbnail">` : ''}
+                            ${image ? `<img src="${escapeHtml(image)}" alt="Image" class="embed-image">` : ''}
+                            
+                            ${footer ? `<div class="embed-footer">
+                                ${footerIcon ? `<img src="${escapeHtml(footerIcon)}" alt="Footer Icon" class="footer-icon">` : ''}
+                                <span>${escapeHtml(footer)}</span>
+                            </div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (messageType === 'regular' || messageType === 'dual') {
+                const regularMessage = document.getElementById('regularMessage').value;
+                previewHtml += `
+                    <div class="discord-message regular-message">
+                        ${escapeHtml(regularMessage)}
                     </div>
                 `;
             }
@@ -139,9 +319,10 @@
             const messageType = document.getElementById('messageType').value;
             const messageLink = document.getElementById('messageLink').value;
 
-            if (!webhook) {
+            const webhookRegex = /^https:\/\/discord\.com\/api\/webhooks\/[^\/]+\/[^\/]+$/;
+            if (!webhook || !webhookRegex.test(webhook)) {
+                webhookError.textContent = 'Invalid Webhook URL!';
                 webhookError.style.display = 'block';
-                document.getElementById('webhook').scrollIntoView({ behavior: 'smooth', block: 'center' });
                 statusMessage.textContent = '';
                 return;
             }
@@ -164,29 +345,55 @@
                 const thumbnail = document.getElementById('thumbnail').value;
                 const image = document.getElementById('image').value;
                 const regularMessage = document.getElementById('regularMessage').value;
+                const webhookName = document.getElementById('webhookName').value;
+                const webhookAvatar = document.getElementById('webhookAvatar').value;
+                const footer = document.getElementById('footer').value;
+                const footerIcon = document.getElementById('footerIcon').value;
+                const timestamp = document.getElementById('timestamp').value;
 
-                body = JSON.stringify({
+                const embedFields = [];
+                const fieldsContainer = document.getElementById('embedFieldsContainer');
+                
+                for (let i = 1; i < fieldsContainer.children.length; i++) {
+                    const fieldName = document.getElementById(`fieldName${i-1}`)?.value;
+                    const fieldValue = document.getElementById(`fieldValue${i-1}`)?.value;
+                    const fieldInline = document.getElementById(`fieldInline${i-1}`)?.checked;
+                    
+                    if (fieldName && fieldValue) {
+                        embedFields.push({ name: fieldName, value: fieldValue, inline: fieldInline });
+                    }
+                }
+
+                const embedPayload = {
                     embeds: [{
                         title: title,
                         description: description,
                         color: parseInt(color.replace('#', ''), 16),
-                        author: {
+                        fields: embedFields,
+                        author: author ? {
                             name: author,
                             icon_url: authorIcon
-                        },
-                        thumbnail: {
-                            url: thumbnail
-                        },
-                        image: {
-                            url: image
-                        }
+                        } : undefined,
+                        thumbnail: thumbnail ? { url: thumbnail } : undefined,
+                        image: image ? { url: image } : undefined,
+                        footer: footer ? {
+                            text: footer,
+                            icon_url: footerIcon
+                        } : undefined,
+                        timestamp: timestamp ? new Date(timestamp).toISOString() : undefined
                     }],
-                    content: messageType === 'dual' ? regularMessage : undefined
-                });
+                    content: messageType === 'dual' ? regularMessage : undefined,
+                    username: webhookName || undefined,
+                    avatar_url: webhookAvatar || undefined
+                };
+
+                body = JSON.stringify(embedPayload);
             } else if (messageType === 'regular') {
                 body = JSON.stringify({
                     content: document.getElementById('regularMessage').value,
-                    embeds: [] // This line explicitly removes any existing embeds
+                    embeds: [],
+                    username: document.getElementById('webhookName').value || undefined,
+                    avatar_url: document.getElementById('webhookAvatar').value || undefined
                 });
             }
 
@@ -232,31 +439,30 @@
             }
         }
 
-        document.getElementById('messageType').addEventListener('change', function () {
-            const messageType = this.value;
-            const regularMessageSection = document.getElementById('regularMessageSection');
-            const embedSection = document.getElementById('embedSection');
+document.getElementById('messageType').addEventListener('change', function () {
+    const messageType = this.value;
+    const regularMessageSection = document.getElementById('regularMessageSection');
+    const embedSection = document.getElementById('embedSection');
 
-            if (messageType === 'embed') {
-                regularMessageSection.style.display = 'none';
-                embedSection.style.display = 'block';
-            } else if (messageType === 'regular') {
-                regularMessageSection.style.display = 'block';
-                embedSection.style.display = 'none';
-            } else if (messageType === 'dual') {
-                regularMessageSection.style.display = 'block';
-                embedSection.style.display = 'block';
-            }
+    if (messageType === 'embed') {
+        regularMessageSection.style.display = 'none';
+        embedSection.style.display = 'block';
+    } else if (messageType === 'regular') {
+        regularMessageSection.style.display = 'block';
+        embedSection.style.display = 'none';
+    } else if (messageType === 'dual') {
+        regularMessageSection.style.display = 'block';
+        embedSection.style.display = 'block';
+    }
 
-            updatePreview();
-        });
+    updatePreview();
+});
 
-        document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('messageType').dispatchEvent(new Event('change'));
-        });
-
-        document.querySelectorAll('#regularMessage, #title, #description, #color, #author, #authorIcon, #thumbnail, #image')
-            .forEach(input => input.addEventListener('input', updatePreview));
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('messageType').dispatchEvent(new Event('change'));
+    document.querySelectorAll('#regularMessage, #title, #description, #color, #author, #authorIcon, #thumbnail, #image, #footer, #footerIcon, #webhookName, #webhookAvatar')
+        .forEach(input => input.addEventListener('input', updatePreview));
+});
     </script>
 </body>
 </html>
