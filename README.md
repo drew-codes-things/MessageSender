@@ -2,13 +2,13 @@
 
 - This is a website based tool using html, js and css to send messages to discord
 
-# Features
+## Features
 - Utilises the [Discord](https://discord.com/) [webhook](https://support.discord.com/hc/en-us/articles/228383668-Intro-to-Webhooks)
 - Uses the system to send messages via the webhook customisable in discord
 - You can send regular messages at a constant
 - You can send fully customisable embedded messages
 - An indicator for wether it sent or not
 
-# Inquiries
-- Contact me via email at `support@starlover.online` if any issues occur
+## Issues
+Contact me via <a href="mailto:support@starlover.online">support@starlover.online</a> in a case of any issues with an image and explanation
 
